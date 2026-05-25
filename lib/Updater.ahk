@@ -77,43 +77,63 @@ CheckForUpdates(silent := false) {
 }
 
 ; ============================================================
-;  Fetch latest release info from GitHub
+;  Fetch latest release info from GitHub via PowerShell
+;  (WinHTTP fails on TLS 1.2 on some systems)
 ; ============================================================
 FetchLatestRelease() {
     global UPDATER_API_URL
 
+    tempFile := A_Temp "\roblox_afk_release.json"
+    if (FileExist(tempFile))
+        FileDelete(tempFile)
+
+    ; Build PowerShell command
+    psCmd := "powershell -NoProfile -NonInteractive -Command "
+        . Chr(34)
+        . "try { $r = Invoke-WebRequest -Uri '" UPDATER_API_URL "'"
+        . " -Headers @{'User-Agent'='RobloxAFKKeeper-Updater'}"
+        . " -UseBasicParsing -TimeoutSec 10;"
+        . " $r.Content | Out-File -Encoding utf8 '" tempFile "' }"
+        . " catch { exit 1 }"
+        . Chr(34)
+
     try {
-        whr := ComObject("WinHttp.WinHttpRequest.5.1")
-        whr.Open("GET", UPDATER_API_URL, true)
-        whr.SetRequestHeader("User-Agent", "RobloxAFKKeeper-Updater")
-        whr.SetRequestHeader("Accept", "application/vnd.github.v3+json")
-        whr.Send()
-        whr.WaitForResponse()
-
-        if (whr.Status != 200)
-            return false
-
-        responseText := whr.ResponseText
+        RunWait(psCmd,, "Hide")
     } catch {
         return false
     }
 
-    ; Parse JSON manually (no external dependencies)
-    tag := ExtractJsonString(responseText, "tag_name")
-    body := ExtractJsonString(responseText, "body")
-    
+    if (!FileExist(tempFile))
+        return false
+
+    try {
+        responseText := FileRead(tempFile, "UTF-8")
+        FileDelete(tempFile)
+    } catch {
+        return false
+    }
+
+    if (responseText = "")
+        return false
+
+    ; Parse JSON
+    tag         := ExtractJsonString(responseText, "tag_name")
+    body        := ExtractJsonString(responseText, "body")
+
+    if (tag = "")
+        return false
+
     ; Find .exe download URL in assets
     downloadUrl := ""
     assetsPos := InStr(responseText, '"assets"', true)
     if (assetsPos > 0) {
-        ; Look for browser_download_url ending in .exe
         searchFrom := assetsPos
         Loop {
             urlPos := InStr(responseText, '"browser_download_url"', true, searchFrom)
             if (urlPos = 0)
                 break
             url := ExtractJsonString(SubStr(responseText, urlPos), "browser_download_url")
-            if (SubStr(url, -4) = ".exe") {
+            if (SubStr(url, -3) = ".exe") {
                 downloadUrl := url
                 break
             }
@@ -121,10 +141,9 @@ FetchLatestRelease() {
         }
     }
 
-    ; If no .exe asset found, construct a URL to the release page
-    if (downloadUrl = "") {
+    ; Fallback to releases page if no .exe asset
+    if (downloadUrl = "")
         downloadUrl := "https://github.com/" UPDATER_REPO_OWNER "/" UPDATER_REPO_NAME "/releases/tag/" tag
-    }
 
     return {tag: tag, downloadUrl: downloadUrl, body: body}
 }
@@ -134,7 +153,7 @@ FetchLatestRelease() {
 ; ============================================================
 DownloadAndInstallUpdate(downloadUrl, newTag) {
     ; If URL is a release page (no .exe asset), just open browser
-    if (SubStr(downloadUrl, -4) != ".exe") {
+    if (SubStr(downloadUrl, -3) != ".exe") {
         Run(downloadUrl)
         return
     }
@@ -145,48 +164,48 @@ DownloadAndInstallUpdate(downloadUrl, newTag) {
     try {
         if (!DirExist(tempDir))
             DirCreate(tempDir)
+        if (FileExist(tempFile))
+            FileDelete(tempFile)
+    }
 
-        ; Download with progress indication
-        LogMsg("Downloading update " newTag "...")
+    LogMsg("Downloading update " newTag "...")
 
-        whr := ComObject("WinHttp.WinHttpRequest.5.1")
-        whr.Open("GET", downloadUrl, true)
-        whr.SetRequestHeader("User-Agent", "RobloxAFKKeeper-Updater")
-        whr.Send()
-        whr.WaitForResponse()
+    ; Download via PowerShell (WinHTTP fails with TLS on this system)
+    psCmd := "powershell -NoProfile -NonInteractive -Command "
+        . Chr(34)
+        . "try {"
+        . " Invoke-WebRequest -Uri '" downloadUrl "'"
+        . " -Headers @{'User-Agent'='RobloxAFKKeeper-Updater'}"
+        . " -OutFile '" tempFile "' -UseBasicParsing -TimeoutSec 120"
+        . " } catch { exit 1 }"
+        . Chr(34)
 
-        if (whr.Status != 200) {
-            MsgBox(L("UpdateDownloadFailed") "`nHTTP " whr.Status, L("UpdateTitle"), 16)
-            return
-        }
-
-        ; Save binary response to file
-        adoStream := ComObject("ADODB.Stream")
-        adoStream.Type := 1  ; Binary
-        adoStream.Open()
-        adoStream.Write(whr.ResponseBody)
-        adoStream.SaveToFile(tempFile, 2)  ; Overwrite
-        adoStream.Close()
-
-        LogMsg("Download complete. Installing...")
-
+    try {
+        RunWait(psCmd,, "Hide")
     } catch as err {
         MsgBox(L("UpdateDownloadFailed") "`n" err.Message, L("UpdateTitle"), 16)
         return
     }
 
+    if (!FileExist(tempFile)) {
+        MsgBox(L("UpdateDownloadFailed"), L("UpdateTitle"), 16)
+        return
+    }
+
+    LogMsg("Download complete. Installing...")
+
     ; Create a batch script that waits for this process to exit,
     ; then replaces the EXE and restarts it
     currentExe := A_ScriptFullPath
     batchFile  := tempDir "\update.bat"
-    
+
     batchContent := "@echo off`r`n"
     batchContent .= "echo Updating Roblox AFK Keeper...`r`n"
     batchContent .= "timeout /t 2 /nobreak > nul`r`n"
-    batchContent .= 'copy /Y "' tempFile '" "' currentExe '"`r`n'
-    batchContent .= 'start "" "' currentExe '"`r`n'
-    batchContent .= 'del "' tempFile '"`r`n'
-    batchContent .= 'del "%~f0"`r`n'  ; Self-delete batch file
+    batchContent .= 'copy /Y "' tempFile '" "' currentExe '"' "`r`n"
+    batchContent .= 'start "" "' currentExe '"' "`r`n"
+    batchContent .= 'del "' tempFile '"' "`r`n"
+    batchContent .= 'del "%~f0"' "`r`n"  ; Self-delete batch file
 
     f := FileOpen(batchFile, "w")
     f.Write(batchContent)
