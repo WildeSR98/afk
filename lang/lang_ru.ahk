@@ -41,12 +41,4 @@ LoadRussian() {
     lang["ActivationError"] := "Неверный код активации!"
     lang["ActivationCodeLen"] := "Код должен содержать 16 символов!"
     lang["LangBtn"] := "EN"
-    lang["UpdateTitle"] := "Обновление"
-    lang["UpdateCheckFailed"] := "Не удалось проверить обновления. Проверьте подключение к интернету."
-    lang["UpdateUpToDate"] := "У вас последняя версия!"
-    lang["UpdateCurrentVer"] := "Текущая версия"
-    lang["UpdateNewVer"] := "Новая версия"
-    lang["UpdateAvailable"] := "Доступна новая версия! Скачать и установить?"
-    lang["UpdateDownloadFailed"] := "Ошибка загрузки обновления."
-    lang["CheckUpdates"] := "Проверить обновления"
 }

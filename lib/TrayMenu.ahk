@@ -11,15 +11,9 @@ SetupTray() {
     A_TrayMenu.Add(L("Start") " / " L("Stop"), ToggleAFK)
     A_TrayMenu.Add(L("ToTray"), ShowGuiFromTray)
     A_TrayMenu.Add()
-    A_TrayMenu.Add(L("CheckUpdates"), TrayCheckUpdates)
-    A_TrayMenu.Add()
     A_TrayMenu.Add("Exit", ExitHandler)
     A_TrayMenu.Default := L("ToTray")
     A_TrayMenu.ClickCount := 2
-}
-
-TrayCheckUpdates(*) {
-    CheckForUpdates(false)  ; explicit check, show result even if up-to-date
 }
 
 ShowGuiFromTray(*) {

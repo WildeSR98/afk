@@ -17,7 +17,6 @@ global APP_VERSION := "v3.2"
 #Include lib\Activation.ahk
 #Include lib\AFKCore.ahk
 #Include lib\Reconnect.ahk
-#Include lib\Updater.ahk
 #Include lib\TrayMenu.ahk
 #Include src\CodeData.ahk
 
@@ -196,6 +195,4 @@ if (!CheckActivation()) {
     ShowMainWindow()
     SetupTray()
     SetupHotkeys()
-    ; Silent update check on startup (respects 24h cache)
-    SetTimer(() => CheckForUpdates(true), -3000)
 }

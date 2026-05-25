@@ -41,12 +41,4 @@ LoadEnglish() {
     lang["ActivationError"] := "Invalid activation code!"
     lang["ActivationCodeLen"] := "Code must be 16 characters!"
     lang["LangBtn"] := "RU"
-    lang["UpdateTitle"] := "Update"
-    lang["UpdateCheckFailed"] := "Failed to check for updates. Check your internet connection."
-    lang["UpdateUpToDate"] := "You have the latest version!"
-    lang["UpdateCurrentVer"] := "Current version"
-    lang["UpdateNewVer"] := "New version"
-    lang["UpdateAvailable"] := "A new version is available! Download and install?"
-    lang["UpdateDownloadFailed"] := "Failed to download update."
-    lang["CheckUpdates"] := "Check for Updates"
 }
