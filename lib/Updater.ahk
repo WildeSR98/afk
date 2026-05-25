@@ -152,6 +152,13 @@ FetchLatestRelease() {
 ;  Download the EXE and self-replace
 ; ============================================================
 DownloadAndInstallUpdate(downloadUrl, newTag) {
+    ; If running as source script (not compiled EXE) — open browser
+    if (!A_IsCompiled) {
+        MsgBox("Auto-install works only for compiled EXE.`nOpening download page...", L("UpdateTitle"), 64)
+        Run(downloadUrl)
+        return
+    }
+
     ; If URL is a release page (no .exe asset), just open browser
     if (SubStr(downloadUrl, -3) != ".exe") {
         Run(downloadUrl)
@@ -194,24 +201,32 @@ DownloadAndInstallUpdate(downloadUrl, newTag) {
 
     LogMsg("Download complete. Installing...")
 
-    ; Create a batch script that waits for this process to exit,
-    ; then replaces the EXE and restarts it
+    ; currentExe = full path to THIS compiled EXE
+    ; workDir    = directory containing the EXE (where resources\ lives)
     currentExe := A_ScriptFullPath
+    workDir    := A_ScriptDir
+    currentPID := DllCall("GetCurrentProcessId")
     batchFile  := tempDir "\update.bat"
 
+    ; Batch waits for THIS exact PID to exit, then replaces EXE and restarts
     batchContent := "@echo off`r`n"
-    batchContent .= "echo Updating Roblox AFK Keeper...`r`n"
-    batchContent .= "timeout /t 2 /nobreak > nul`r`n"
+    batchContent .= "echo Waiting for Roblox AFK Keeper to close...`r`n"
+    batchContent .= ":waitloop`r`n"
+    batchContent .= "tasklist /FI " Chr(34) "PID eq " currentPID Chr(34) " 2>nul | find /i " Chr(34) "" currentPID "" Chr(34) " >nul`r`n"
+    batchContent .= "if not errorlevel 1 (timeout /t 1 /nobreak >nul & goto waitloop)`r`n"
+    batchContent .= "echo Copying new version...`r`n"
     batchContent .= 'copy /Y "' tempFile '" "' currentExe '"' "`r`n"
-    batchContent .= 'start "" "' currentExe '"' "`r`n"
+    batchContent .= "if errorlevel 1 (echo Copy failed! & pause & exit /b 1)`r`n"
+    batchContent .= "echo Restarting...`r`n"
+    batchContent .= 'start "" /D "' workDir '" "' currentExe '"' "`r`n"
     batchContent .= 'del "' tempFile '"' "`r`n"
-    batchContent .= 'del "%~f0"' "`r`n"  ; Self-delete batch file
+    batchContent .= 'del "%~f0"' "`r`n"
 
     f := FileOpen(batchFile, "w")
     f.Write(batchContent)
     f.Close()
 
-    ; Run the updater batch and exit
+    ; Run the updater batch and exit THIS process
     Run(batchFile,, "Hide")
     ExitApp()
 }
