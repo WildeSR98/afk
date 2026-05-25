@@ -195,24 +195,29 @@ B64Decode(str) {
     chars := "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
     str := StrReplace(str, "=", "")
     n := StrLen(str)
-    outSize := (n * 3) // 4
+    outSize := (n * 3) // 4 + 4  ; +4 safety margin for partial last group
     buf := Buffer(outSize, 0)
     outPos := 0
     i := 1
-    while (i <= n - 3) {
+    while (i <= n) {
         c0 := InStr(chars, SubStr(str, i,   1)) - 1
-        c1 := InStr(chars, SubStr(str, i+1, 1)) - 1
-        c2 := InStr(chars, SubStr(str, i+2, 1)) - 1
-        c3 := InStr(chars, SubStr(str, i+3, 1)) - 1
+        c1 := (i + 1 <= n) ? (InStr(chars, SubStr(str, i+1, 1)) - 1) : -1
+        c2 := (i + 2 <= n) ? (InStr(chars, SubStr(str, i+2, 1)) - 1) : -1
+        c3 := (i + 3 <= n) ? (InStr(chars, SubStr(str, i+3, 1)) - 1) : -1
         if (c0 < 0 || c1 < 0) {
             i += 4
             continue
         }
-        NumPut("UChar", (c0 << 2) | (c1 >> 4), buf, outPos++)
-        if (c2 >= 0)
-            NumPut("UChar", ((c1 & 0xF) << 4) | (c2 >> 2), buf, outPos++)
-        if (c3 >= 0)
-            NumPut("UChar", ((c2 & 0x3) << 6) | c3, buf, outPos++)
+        NumPut("UChar", (c0 << 2) | (c1 >> 4), buf, outPos)
+        outPos := outPos + 1
+        if (c2 >= 0) {
+            NumPut("UChar", ((c1 & 0xF) << 4) | (c2 >> 2), buf, outPos)
+            outPos := outPos + 1
+        }
+        if (c3 >= 0) {
+            NumPut("UChar", ((c2 & 0x3) << 6) | c3, buf, outPos)
+            outPos := outPos + 1
+        }
         i += 4
     }
     return buf
