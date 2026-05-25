@@ -25,7 +25,7 @@ if "%AHK_DIR%"=="" (
 )
 
 set "AHK2EXE=%AHK_DIR%\Compiler\Ahk2Exe.exe"
-set "AHK2EXE_LOCAL=%ROOT%\Ahk2Exe\Ahk2Exe.exe"
+set "AHK2EXE_LOCAL=%~dp0Ahk2Exe\Ahk2Exe.exe"
 
 if not exist "%AHK2EXE%" (
     if exist "%AHK2EXE_LOCAL%" (
@@ -89,7 +89,7 @@ echo       Resources done.
 :: [3/3] Build EXE
 echo.
 echo [3/3] Building EXE...
-"%AHK2EXE%" /in "%ROOT%\RobloxAFKKeeper.ahk" /out "%ROOT%\dist\RobloxAFKKeeper.exe" /compress 1
+"%AHK2EXE%" /in "%ROOT%\RobloxAFKKeeper.ahk" /out "%ROOT%\dist\RobloxAFKKeeper.exe" /base "%AHK_DIR%\AutoHotkey64.exe" /compress 1
 if errorlevel 1 (
     echo Build failed.
     pause

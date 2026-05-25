@@ -204,7 +204,10 @@ B64Decode(str) {
         c1 := InStr(chars, SubStr(str, i+1, 1)) - 1
         c2 := InStr(chars, SubStr(str, i+2, 1)) - 1
         c3 := InStr(chars, SubStr(str, i+3, 1)) - 1
-        if (c0 < 0 || c1 < 0) { i += 4; continue }
+        if (c0 < 0 || c1 < 0) {
+            i += 4
+            continue
+        }
         NumPut("UChar", (c0 << 2) | (c1 >> 4), buf, outPos++)
         if (c2 >= 0)
             NumPut("UChar", ((c1 & 0xF) << 4) | (c2 >> 2), buf, outPos++)
