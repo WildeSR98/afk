@@ -200,10 +200,10 @@ B64Decode(str) {
     outPos := 0
     i := 1
     while (i <= n) {
-        c0 := InStr(chars, SubStr(str, i,   1)) - 1
-        c1 := (i + 1 <= n) ? (InStr(chars, SubStr(str, i+1, 1)) - 1) : -1
-        c2 := (i + 2 <= n) ? (InStr(chars, SubStr(str, i+2, 1)) - 1) : -1
-        c3 := (i + 3 <= n) ? (InStr(chars, SubStr(str, i+3, 1)) - 1) : -1
+        c0 := InStr(chars, SubStr(str, i,   1), true) - 1
+        c1 := (i + 1 <= n) ? (InStr(chars, SubStr(str, i+1, 1), true) - 1) : -1
+        c2 := (i + 2 <= n) ? (InStr(chars, SubStr(str, i+2, 1), true) - 1) : -1
+        c3 := (i + 3 <= n) ? (InStr(chars, SubStr(str, i+3, 1), true) - 1) : -1
         if (c0 < 0 || c1 < 0) {
             i += 4
             continue
