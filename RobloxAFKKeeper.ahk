@@ -26,6 +26,13 @@ global LICENSE_FILE := A_ScriptDir "\resources\license.dat"
 global TEMPLATE_PNG := A_ScriptDir "\resources\reconnect_template.png"
 global SETTINGS_INI := A_ScriptDir "\resources\settings.ini"
 
+; Ensure required folders exist (critical after update or fresh install)
+EnsureDirectories() {
+    if (!DirExist(A_ScriptDir "\resources"))
+        DirCreate(A_ScriptDir "\resources")
+}
+EnsureDirectories()
+
 ; ---------- State ----------
 global currentLang       := "ru"
 global isActivated       := false

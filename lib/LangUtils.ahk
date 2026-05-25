@@ -9,7 +9,11 @@ LoadLanguage(langCode) {
         LoadRussian()
     else
         LoadEnglish()
-    IniWrite(langCode, SETTINGS_INI, "Settings", "Language")
+    try {
+        if (!DirExist(A_ScriptDir "\resources"))
+            DirCreate(A_ScriptDir "\resources")
+        IniWrite(langCode, SETTINGS_INI, "Settings", "Language")
+    }
 }
 
 L(key) {
