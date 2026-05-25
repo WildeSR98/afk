@@ -1,6 +1,6 @@
 LoadEnglish() {
     global lang := Map()
-    lang["WindowTitle"] := "Roblox AFK Keeper v3.1"
+    lang["WindowTitle"] := "Roblox AFK Keeper v3.2"
     lang["Settings"] := "Settings"
     lang["StatusStopped"] := "Status: Stopped"
     lang["StatusRunning"] := "Status: Running"
@@ -41,4 +41,12 @@ LoadEnglish() {
     lang["ActivationError"] := "Invalid activation code!"
     lang["ActivationCodeLen"] := "Code must be 16 characters!"
     lang["LangBtn"] := "RU"
+    lang["UpdateTitle"] := "Update"
+    lang["UpdateCheckFailed"] := "Failed to check for updates. Check your internet connection."
+    lang["UpdateUpToDate"] := "You have the latest version!"
+    lang["UpdateCurrentVer"] := "Current version"
+    lang["UpdateNewVer"] := "New version"
+    lang["UpdateAvailable"] := "A new version is available! Download and install?"
+    lang["UpdateDownloadFailed"] := "Failed to download update."
+    lang["CheckUpdates"] := "Check for Updates"
 }
