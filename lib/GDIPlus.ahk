@@ -1,8 +1,15 @@
 ; ============================================================
 ;  lib\GDIPlus.ahk
-;  GDI+ helpers for screenshot capture
+;  GDI+ helpers for screenshot capture and image management
+;  Используется: Reconnect.ahk (захват шаблона кнопки)
 ; ============================================================
 
+; ----------------------------------------------------------
+; Gdip_Startup()
+;   Инициализирует GDI+ один раз за сеанс.
+;   Токен сохраняется в глобальной переменной gdipToken.
+;   Повторный вызов безопасен (idempotent).
+; ----------------------------------------------------------
 Gdip_Startup() {
     global gdipToken
     if (gdipToken)
@@ -12,8 +19,17 @@ Gdip_Startup() {
     DllCall("gdiplus\GdiplusStartup", "Ptr*", &gdipToken:=0, "Ptr", si, "Ptr", 0)
 }
 
+; ----------------------------------------------------------
+; Gdip_ScreenCapture(x, y, w, h) → HBITMAP
+;   Делает скриншот прямоугольной области экрана.
+;   Параметры:
+;     x, y — левый верхний угол (экранные координаты)
+;     w, h  — ширина и высота в пикселях
+;   Возвращает: HBITMAP (необходимо удалить через DeleteObject/Gdip_DisposeImage)
+;   ⚠️ Вызывающий код обязан освободить возвращённый дескриптор!
+; ----------------------------------------------------------
 Gdip_ScreenCapture(x, y, w, h) {
-    hdc := DllCall("GetDC", "Ptr", 0, "Ptr")
+    hdc    := DllCall("GetDC", "Ptr", 0, "Ptr")
     hdcMem := DllCall("CreateCompatibleDC", "Ptr", hdc, "Ptr")
     hBitmap := DllCall("CreateCompatibleBitmap", "Ptr", hdc, "Int", w, "Int", h, "Ptr")
     DllCall("SelectObject", "Ptr", hdcMem, "Ptr", hBitmap)
@@ -24,6 +40,15 @@ Gdip_ScreenCapture(x, y, w, h) {
     return hBitmap
 }
 
+; ----------------------------------------------------------
+; Gdip_SaveHBITMAPToFile(hBitmap, filePath)
+;   Сохраняет HBITMAP как PNG-файл через GDI+.
+;   Автоматически инициализирует GDI+ если нужно.
+;   Освобождает pBitmap и hBitmap после сохранения.
+;   Параметры:
+;     hBitmap  — дескриптор растрового изображения (из Gdip_ScreenCapture)
+;     filePath — полный путь к выходному PNG-файлу
+; ----------------------------------------------------------
 Gdip_SaveHBITMAPToFile(hBitmap, filePath) {
     Gdip_Startup()
     pBitmap := 0
@@ -33,4 +58,29 @@ Gdip_SaveHBITMAPToFile(hBitmap, filePath) {
     DllCall("gdiplus\GdipSaveImageToFile", "Ptr", pBitmap, "WStr", filePath, "Ptr", clsid, "Ptr", 0)
     DllCall("gdiplus\GdipDisposeImage", "Ptr", pBitmap)
     DllCall("DeleteObject", "Ptr", hBitmap)
+}
+
+; ----------------------------------------------------------
+; Gdip_DisposeImage(pBitmap)
+;   Освобождает GDI+ pBitmap (объект Image/Bitmap).
+;   Безопасно принимает 0 (нет операции).
+;   ⚠️ Вызывать после каждого GdipCreateBitmapFromHBITMAP!
+; ----------------------------------------------------------
+Gdip_DisposeImage(pBitmap) {
+    if (pBitmap)
+        DllCall("gdiplus\GdipDisposeImage", "Ptr", pBitmap)
+}
+
+; ----------------------------------------------------------
+; Gdip_Shutdown()
+;   Освобождает GDI+ токен при выходе из приложения.
+;   Вызывается из ExitHandler() в TrayMenu.ahk.
+;   Предотвращает утечку неуправляемых ресурсов Windows.
+; ----------------------------------------------------------
+Gdip_Shutdown() {
+    global gdipToken
+    if (gdipToken) {
+        DllCall("gdiplus\GdiplusShutdown", "Ptr", gdipToken)
+        gdipToken := 0
+    }
 }

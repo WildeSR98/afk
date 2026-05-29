@@ -56,10 +56,10 @@ if not exist "%AHK2EXE%" (
     )
 )
 
-:: [1/3] Generate activation codes (only if CodeData.ahk missing)
+:: [1/4] Generate activation codes (only if CodeData.ahk missing)
 if not exist "%ROOT%\src\CodeData.ahk" (
     echo.
-    echo [1/3] Generating activation codes...
+    echo [1/4] Generating activation codes...
     "%AHK_DIR%\AutoHotkey64.exe" "%~dp0generate_codes.ahk"
     if errorlevel 1 (
         echo Code generation failed.
@@ -67,12 +67,12 @@ if not exist "%ROOT%\src\CodeData.ahk" (
         exit /b 1
     )
 ) else (
-    echo [1/3] src\CodeData.ahk already exists. Skipping code generation.
+    echo [1/4] src\CodeData.ahk already exists. Skipping code generation.
 )
 
-:: [2/3] Copy runtime resources to dist\
+:: [2/4] Copy runtime resources to dist\
 echo.
-echo [2/3] Copying resources...
+echo [2/4] Copying resources...
 if not exist "%ROOT%\dist" mkdir "%ROOT%\dist"
 if not exist "%ROOT%\dist\resources" mkdir "%ROOT%\dist\resources"
 if not exist "%ROOT%\dist\lang" mkdir "%ROOT%\dist\lang"
@@ -95,6 +95,43 @@ if errorlevel 1 (
     pause
     exit /b 1
 )
+
+echo.
+echo [Done]!
+echo EXE: dist\RobloxAFKKeeper.exe
+echo Activation codes: tools\codes.txt  (DO NOT publish this file)
+echo.
+pause
+st process ahk
+:: Better: run the obfuscator directly on the source, outputting to build_tmp
+"%AHK_DIR%\AutoHotkey64.exe" "%~dp0obfuscate.ahk" "%ROOT%\RobloxAFKKeeper.ahk" "%BUILD_TMP%"
+if errorlevel 1 (
+    echo Obfuscation failed.
+    pause
+    exit /b 1
+)
+
+:: Copy resources and folders needed for compilation (like src, lib, lang, vendor) into build_tmp
+xcopy "%ROOT%\lang" "%BUILD_TMP%\lang\" /s /e /y /i >nul
+xcopy "%ROOT%\lib" "%BUILD_TMP%\lib\" /s /e /y /i >nul
+xcopy "%ROOT%\vendor" "%BUILD_TMP%\vendor\" /s /e /y /i >nul
+xcopy "%ROOT%\src" "%BUILD_TMP%\src\" /s /e /y /i >nul
+
+:: Re-run obfuscator specifically for includes to overwrite the copied originals in build_tmp
+"%AHK_DIR%\AutoHotkey64.exe" "%~dp0obfuscate.ahk" "%ROOT%\RobloxAFKKeeper.ahk" "%BUILD_TMP%"
+
+:: [4/4] Build EXE
+echo.
+echo [4/4] Building EXE...
+"%AHK2EXE%" /in "%BUILD_TMP%\RobloxAFKKeeper.ahk" /out "%ROOT%\dist\RobloxAFKKeeper.exe" /base "%AHK_DIR%\AutoHotkey64.exe" /compress 1
+if errorlevel 1 (
+    echo Build failed.
+    pause
+    exit /b 1
+)
+
+:: Cleanup
+rmdir /s /q "%BUILD_TMP%"
 
 echo.
 echo [Done]!

@@ -10,9 +10,8 @@ LoadLanguage(langCode) {
     else
         LoadEnglish()
     try {
-        if (!DirExist(A_ScriptDir "\resources"))
-            DirCreate(A_ScriptDir "\resources")
-        IniWrite(langCode, SETTINGS_INI, "Settings", "Language")
+        ConfigManager.Language := langCode
+        ConfigManager.Save()
     }
 }
 

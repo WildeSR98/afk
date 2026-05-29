@@ -73,6 +73,50 @@ IsCodeInData(code) {
     return false
 }
 
+GetHWID() {
+    try {
+        objWMIService := ComObjGet("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2")
+        
+        hwid := ""
+        
+        ; 1. BaseBoard (Материнская плата)
+        colBoards := objWMIService.ExecQuery("Select SerialNumber from Win32_BaseBoard")
+        for objBoard in colBoards {
+            if (objBoard.SerialNumber != "")
+                hwid .= Trim(objBoard.SerialNumber) "_"
+        }
+        
+        ; 2. CPU (Процессор)
+        colCPUs := objWMIService.ExecQuery("Select ProcessorId from Win32_Processor")
+        for objCPU in colCPUs {
+            if (objCPU.ProcessorId != "")
+                hwid .= Trim(objCPU.ProcessorId) "_"
+        }
+        
+        ; 3. Disk (Диск - берем только первый, чтобы избежать сбоев при флешках)
+        colDisks := objWMIService.ExecQuery("Select SerialNumber from Win32_DiskDrive")
+        for objDisk in colDisks {
+            if (objDisk.SerialNumber != "") {
+                hwid .= Trim(objDisk.SerialNumber)
+                break
+            }
+        }
+        
+        if (hwid != "")
+            return hwid
+    }
+    return "DEFAULT_HWID"
+}
+
+GetHWIDHash() {
+    hwid := GetHWID()
+    hash := 0
+    Loop Parse hwid {
+        hash := (hash * 31 + Ord(A_LoopField)) & 0xFFFFFFFF
+    }
+    return hash
+}
+
 ValidateLicenseFile() {
     global LICENSE_FILE, CODES_SALT1, APP_SALT2
 
@@ -119,7 +163,14 @@ ActivateByCode(rawCode) {
         return false
     }
 
-    ; Save license: code XOR'd with CODES_SALT1
+    ; Save license: code XOR'd with CODES_SALT1 and HWID_hash
+    hwid_hash := GetHWIDHash()
+    hwid_0 := (hwid_hash >> 24) & 0xFF
+    hwid_1 := (hwid_hash >> 16) & 0xFF
+    hwid_2 := (hwid_hash >>  8) & 0xFF
+    hwid_3 :=  hwid_hash        & 0xFF
+    hwid_salt := [hwid_0, hwid_1, hwid_2, hwid_3]
+
     salt1_0 := (CODES_SALT1 >> 24) & 0xFF
     salt1_1 := (CODES_SALT1 >> 16) & 0xFF
     salt1_2 := (CODES_SALT1 >>  8) & 0xFF
@@ -134,8 +185,9 @@ ActivateByCode(rawCode) {
     enc := Buffer(16)
     Loop 16 {
         s := salt1[Mod(A_Index - 1, 4) + 1]
+        h := hwid_salt[Mod(A_Index - 1, 4) + 1]
         c := Ord(SubStr(code, A_Index, 1))
-        NumPut("UChar", c ^ s, enc, A_Index - 1)
+        NumPut("UChar", c ^ s ^ h, enc, A_Index - 1)
     }
     licFile.RawWrite(enc, 16)
     licFile.Close()
@@ -146,24 +198,28 @@ ActivateByCode(rawCode) {
 
 ShowActivationWindow() {
     global activationGui
-    activationGui := Gui("+AlwaysOnTop +MinSize360x200", L("ActivationTitle"))
-    activationGui.SetFont("s10", "Segoe UI")
-    activationGui.BackColor := "FFFFFF"
+    activationGui := Gui("+AlwaysOnTop -MinimizeBox", L("ActivationTitle"))
+    activationGui.SetFont("s10 cE0E0E0", "Segoe UI")
+    activationGui.BackColor := "1A1A1A"
     activationGui.MarginX := 20
     activationGui.MarginY := 15
 
-    activationGui.AddText("vPromptText w320 Center", L("ActivationPrompt"))
-    activationGui.AddText("vFormatText w320 Center c808080", L("ActivationFormat")).SetFont("s9")
-    codeEdit := activationGui.AddEdit("vCodeEdit w320 Center UpperCase y+10")
+    activationGui.AddText("vPromptText x20 y18 w320 Center", L("ActivationPrompt"))
+    activationGui.AddText("vFormatText x20 y+8 w320 Center c888888", L("ActivationFormat")).SetFont("s8")
+    activationGui.AddText("x20 y+6 w320 h1 Background3A3A3A")
+    codeEdit := activationGui.AddEdit("vCodeEdit x20 y+8 w320 h26 Center UpperCase Background2A2A2A cE0E0E0 -E0x200")
 
-    btn := activationGui.AddButton("vActivateBtn w320 Default y+15", L("ActivateBtn"))
-    btn.OnEvent("Click", (*) => TryActivate(codeEdit.Value))
+    btn := activationGui.AddButton("-Theme vActivateBtn x20 y+12 w320 h32 Default", L("ActivateBtn"))
+    btn.SetFont("s10 w600")
+    btn.OnEvent("Click", (*) => TryActivate(activationGui["CodeEdit"].Value))
 
-    langBtn := activationGui.AddButton("vLangBtn w80 y+10", L("LangBtn"))
+    activationGui.AddText("x20 y+6 w320 h1 Background3A3A3A")
+    langBtn := activationGui.AddButton("-Theme vLangBtn x20 y+8 w80 h24", L("LangBtn"))
+    langBtn.SetFont("s9 w400")
     langBtn.OnEvent("Click", ToggleActivationLang)
 
     activationGui.OnEvent("Close", (*) => ExitApp())
-    activationGui.Show("AutoSize Center")
+    activationGui.Show("w360 AutoSize Center")
 }
 
 ToggleActivationLang(*) {

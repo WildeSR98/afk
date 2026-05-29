@@ -8,7 +8,7 @@ SetupTray() {
     A_IconTip := "Roblox AFK Keeper " APP_VERSION
     TraySetIcon("shell32.dll", 44)
     A_TrayMenu.Delete()
-    A_TrayMenu.Add(L("Start") " / " L("Stop"), ToggleAFK)
+    A_TrayMenu.Add(L("Start") " / " L("Stop"), ObjBindMethod(AFKEngine, "Toggle"))
     A_TrayMenu.Add(L("ToTray"), ShowGuiFromTray)
     A_TrayMenu.Add()
     A_TrayMenu.Add("Exit", ExitHandler)
@@ -28,7 +28,7 @@ HideToTray(*) {
     global appGui
     if (IsObject(appGui))
         appGui.Hide()
-    TrayTip("Roblox AFK Keeper", "Running in background. Press F10 to start/stop.")
+    TrayTip("Running in background. Press " ConfigManager.HotkeyToggle " to start/stop.", "Roblox AFK Keeper", "Iconi")
 }
 
 OnClosing(*) {
@@ -36,5 +36,18 @@ OnClosing(*) {
 }
 
 ExitHandler(*) {
+    global gdipToken
+
+    ; 1. Остановить все таймеры
+    AFKEngine.Stop()
+    ReconnectManager.Stop()
+
+    ; 2. Освободить GDI+
+    if (gdipToken) {
+        DllCall("gdiplus\GdiplusShutdown", "Ptr", gdipToken)
+        gdipToken := 0
+    }
+
+    ; 3. Завершить
     ExitApp()
 }
