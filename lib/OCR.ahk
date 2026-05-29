@@ -1,4 +1,4 @@
-﻿#Requires AutoHotkey v2
+#Requires AutoHotkey v2
 
 /**
  * OCR library: a wrapper for the the UWP Windows.Media.Ocr library.
@@ -617,6 +617,24 @@ class OCR {
     }
 
     class Common extends OCR.IBase {
+        /**
+         * Stub declaration for static analysis.
+         * Concrete subclasses (Result, Line, Word) override this with actual ComCall implementations.
+         * @returns {Object} {x, y, w, h}
+         */
+        BoundingRect {
+            get => {x: 0, y: 0, w: 0, h: 0}
+        }
+
+        /**
+         * Stub declaration for static analysis.
+         * Overridden by Result (all words across lines) and Line (words in this line).
+         * @returns {Array}
+         */
+        Words {
+            get => []
+        }
+
         x {
             get => this.BoundingRect.x
         } 

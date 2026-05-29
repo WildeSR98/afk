@@ -10,7 +10,7 @@ global APP_VERSION := "v3.2"
 
 #Include lang\lang_en.ahk
 #Include lang\lang_ru.ahk
-#Include vendor\OCR.ahk
+#Include lib\OCR.ahk
 #Include lib\Config.ahk
 #Include lib\LangUtils.ahk
 #Include lib\WindowUtils.ahk
