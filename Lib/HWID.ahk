@@ -109,17 +109,22 @@ ShowActivationGUI(currentHWID, licenseFile) {
     A_Clipboard := currentHWID
 
     MyGui := Gui("+AlwaysOnTop -MinimizeBox -MaximizeBox", "Активация Zombie Arena")
+    
     MyGui.SetFont("s10", "Segoe UI")
-
     MyGui.AddText("w320 Center", "Внимание: Требуется лицензионный ключ!")
-    MyGui.AddText("w320 Center cGray s8", "Ваш HWID автоматически скопирован в буфер обмена")
-    MyGui.AddText("w320 Center cGray s8", "HWID: " currentHWID)
-
+    
+    MyGui.SetFont("s8 cGray")
+    MyGui.AddText("w320 Center", "Ваш HWID автоматически скопирован в буфер обмена")
+    MyGui.AddText("w320 Center", "HWID: " currentHWID)
+    
+    MyGui.SetFont("s10 cDefault")
     MyGui.AddText("w320 y+15", "Введите ваш 16-значный лицензионный ключ:")
     KeyEdit := MyGui.AddEdit("w320 Limit50")
-
-    StatusText := MyGui.AddText("w320 cRed Center y+5", "")
-
+    
+    MyGui.SetFont("cRed")
+    StatusText := MyGui.AddText("w320 Center y+5", "")
+    
+    MyGui.SetFont("cDefault")
     BtnActivate := MyGui.AddButton("w120 Default y+10 xp+100", "Активировать")
     BtnActivate.OnEvent("Click", (*) => AttemptActivation(MyGui, KeyEdit.Value, currentHWID, licenseFile, StatusText, BtnActivate))
 
