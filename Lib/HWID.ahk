@@ -172,7 +172,7 @@ AttemptActivation(GuiObj, enteredKey, currentHWID, licenseFile, StatusText, BtnO
                 FileDelete(licenseFile)
             FileAppend(cleanKey . "|" . sig, licenseFile)
 
-            MsgBox("Активация успешно завершена!", "Zombie Arena", "Icon* 64")
+            MsgBox("Активация успешно завершена!", "Zombie Arena", "Iconi")
             GuiObj.Destroy()
         } else if InStr(response, "ERROR: Invalid key") {
             StatusText.Text := "Ошибка: Ключ не существует!"
