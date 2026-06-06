@@ -1,0 +1,17 @@
+ZA_Map=Rooftop Siege
+ZA_Difficulty=Normal
+ZA_Q_Enabled=1
+ZA_Q_Key=q
+ZA_Q_Interval=5000
+ZA_E_Enabled=0
+ZA_E_Key=e
+ZA_E_Interval=5000
+ZA_R_Enabled=1
+ZA_R_Key=r
+ZA_R_Interval=5000
+ZA_Aim_Enabled=1
+ZA_Aim_Interval=600
+ZA_Atk_Enabled=1
+ZA_Atk_Interval=800
+ZA_PA_Enabled=1
+ZA_PA_Interval=4000
