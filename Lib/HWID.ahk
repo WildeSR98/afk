@@ -9,7 +9,7 @@ global LicenseServerURL := "https://script.google.com/macros/s/AKfycbxdGH4ydoOn9
 
 ; Список доверенных HWID разработчиков (работают без проверки лицензии)
 global DeveloperHWIDs := [
-    "5176375A-CA1DD9D6" ; Ваш HWID разработчика
+    ;"5176375A-CA1DD9D6" ; Ваш HWID разработчика
 ]
 
 ; --- Основные функции модуля ---
@@ -180,7 +180,7 @@ AttemptActivation(GuiObj, enteredKey, currentHWID, licenseFile, StatusText, BtnO
             BtnObj.Enabled := true
         }
     } catch Error as err {
-        StatusText.Text := "Ошибка соединения с сервером!"
+        StatusText.Text := "Ошибка соединения: " err.Message
         BtnObj.Enabled := true
     }
 }
