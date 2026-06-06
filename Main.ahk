@@ -2,6 +2,8 @@
 #SingleInstance Force
 #NoTrayIcon
 SendMode "Event"
+#Include %A_ScriptDir%\Lib\HWID.ahk
+CheckLicense()
 #Include %A_ScriptDir%\lib/Image.ahk
 #Include %A_ScriptDir%\lib/GUI.ahk
 #Include %A_ScriptDir%\lib/GameMango.ahk

@@ -3,6 +3,9 @@
 #NoTrayIcon
 SendMode "Event"
 
+#Include Lib\HWID.ahk
+CheckLicense()
+
 ; ============================================================
 ;  ZombieArena_Main.ahk
 ;  Anime Adventures framework + Zombie Arena Farm module.
