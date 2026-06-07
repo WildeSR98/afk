@@ -888,6 +888,7 @@ ZA_Hub_ClickTextInClient(hwnd, targetText, restrictLeft := false, restrictRight 
         wordCompare := (w, n) => (StrLen(n) <= 2) ? (w = n) : InStr(w, n)
         matches := result.FindStrings(targetText, false, wordCompare)
         
+        clicked := false
         for match in matches {
             clickX := match.x + match.w // 2
             clickY := match.y + match.h // 2
@@ -906,8 +907,20 @@ ZA_Hub_ClickTextInClient(hwnd, targetText, restrictLeft := false, restrictRight 
             MouseClick("Left", clickX, clickY, 1, 0, "D")
             Sleep(100)
             MouseClick("Left", clickX, clickY, 1, 0, "U")
-            return true
+            clicked := true
+            break
         }
+        
+        if clicked
+            return true
+            
+        ; Логируем подробности, если не удалось найти/кликнуть текст
+        cleanText := StrReplace(result.Text, "`r", " ")
+        cleanText := StrReplace(cleanText, "`n", " ")
+        cleanText := RegExReplace(cleanText, " +", " ")
+        try ProcessLog("[ZA-Debug] ClickText failed for '" targetText "'. OCR raw: " SubStr(cleanText, 1, 150))
+    } catch as e {
+        try ProcessLog("[ZA-Debug] ClickText error: " e.Message)
     }
     return false
 }
