@@ -863,7 +863,7 @@ ZA_Hub_CreateMatch() {
     }
     Sleep(1000)
 
-    ClickText("1", false)
+    ClickText("1", false, false, true)
     Sleep(500)
 
     try ProcessLog("[ZA] Clicking CREATE...")
